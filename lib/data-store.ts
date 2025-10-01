@@ -212,7 +212,7 @@ class DataStore {
       atRiskCustomers: highRiskCustomers,
       predictedChurnRate: avgRiskScore,
       retainedRevenue30d: this.customers.reduce((sum, c) => sum + c.totalRevenue, 0) * 0.3,
-      avgTreatmentEffect: 18.7 // Mock value
+      unclaimedRevenue: this.customers.reduce((sum, c) => sum + c.totalRevenue, 0) * 0.4 // Mock value
     }
   }
 
