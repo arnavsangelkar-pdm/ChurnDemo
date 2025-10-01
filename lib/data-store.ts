@@ -83,28 +83,28 @@ class DataStore {
 
     if (filters?.customerAge) {
       if (filters.customerAge.min !== undefined) {
-        filtered = filtered.filter(c => c.customerAge >= filters.customerAge.min!)
+        filtered = filtered.filter(c => c.customerAge >= filters.customerAge!.min!)
       }
       if (filters.customerAge.max !== undefined) {
-        filtered = filtered.filter(c => c.customerAge <= filters.customerAge.max!)
+        filtered = filtered.filter(c => c.customerAge <= filters.customerAge!.max!)
       }
     }
 
     if (filters?.engagementScore) {
       if (filters.engagementScore.min !== undefined) {
-        filtered = filtered.filter(c => c.engagementScore >= filters.engagementScore.min!)
+        filtered = filtered.filter(c => c.engagementScore >= filters.engagementScore!.min!)
       }
       if (filters.engagementScore.max !== undefined) {
-        filtered = filtered.filter(c => c.engagementScore <= filters.engagementScore.max!)
+        filtered = filtered.filter(c => c.engagementScore <= filters.engagementScore!.max!)
       }
     }
 
     if (filters?.loyaltyScore) {
       if (filters.loyaltyScore.min !== undefined) {
-        filtered = filtered.filter(c => c.loyaltyScore >= filters.loyaltyScore.min!)
+        filtered = filtered.filter(c => c.loyaltyScore >= filters.loyaltyScore!.min!)
       }
       if (filters.loyaltyScore.max !== undefined) {
-        filtered = filtered.filter(c => c.loyaltyScore <= filters.loyaltyScore.max!)
+        filtered = filtered.filter(c => c.loyaltyScore <= filters.loyaltyScore!.max!)
       }
     }
 
@@ -119,10 +119,10 @@ class DataStore {
 
     if (filters?.daysSinceLastActivity) {
       if (filters.daysSinceLastActivity.min !== undefined) {
-        filtered = filtered.filter(c => c.daysSinceLastActivity >= filters.daysSinceLastActivity.min!)
+        filtered = filtered.filter(c => c.daysSinceLastActivity >= filters.daysSinceLastActivity!.min!)
       }
       if (filters.daysSinceLastActivity.max !== undefined) {
-        filtered = filtered.filter(c => c.daysSinceLastActivity <= filters.daysSinceLastActivity.max!)
+        filtered = filtered.filter(c => c.daysSinceLastActivity <= filters.daysSinceLastActivity!.max!)
       }
     }
 
