@@ -65,30 +65,26 @@ export default function CustomersPage() {
       setCurrentSegment(segment)
       switch (segment) {
         case 'previously-high-value-likely-churn':
-          newFilters.riskBand = 'High'
+          newFilters.riskBand = 'High,Medium'
           newFilters.ltvTier = 'Gold,VIP'
           break
         case 'lost-customers-resurrectable':
-          newFilters.status = 'churned'
           newFilters.ltvTier = 'Silver,Gold,VIP'
-          newFilters.daysSinceLastActivityMax = 90
+          newFilters.daysSinceLastActivityMax = 120
           break
         case 'high-value-no-discount-needed':
           newFilters.riskBand = 'Low'
           newFilters.ltvTier = 'Gold,VIP'
-          newFilters.loyaltyScoreMin = 80
           break
         case 'price-sensitive-at-risk':
           newFilters.riskBand = 'High,Medium'
           newFilters.priceSensitivity = 'high'
           break
         case 'new-customers-high-potential':
-          newFilters.customerAgeMax = 30
-          newFilters.engagementScoreMin = 70
+          newFilters.riskBand = 'Low'
           break
         case 'seasonal-customers-dormant':
-          newFilters.daysSinceLastActivityMin = 60
-          newFilters.seasonalPattern = true
+          newFilters.riskBand = 'Medium'
           break
         case 'high-frequency-low-value':
           // Filter for customers with many orders but low average order value

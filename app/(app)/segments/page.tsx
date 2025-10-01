@@ -166,46 +166,46 @@ export default function SegmentsPage() {
         switch (segment.id) {
           case 'previously-high-value-likely-churn':
             segmentCustomers = response.customers.filter(c => 
-              ['Gold', 'VIP'].includes(c.ltvTier) && c.riskScore >= 60
+              ['Gold', 'VIP'].includes(c.ltvTier) && c.riskScore >= 50
             )
             break
           case 'lost-customers-resurrectable':
             segmentCustomers = response.customers.filter(c => 
-              c.status === 'churned' && 
+              (c.status === 'churned' || c.daysSinceLastActivity > 90) && 
               ['Silver', 'Gold', 'VIP'].includes(c.ltvTier) && 
-              c.daysSinceLastActivity < 90
+              c.daysSinceLastActivity < 120
             )
             break
           case 'high-value-no-discount-needed':
             segmentCustomers = response.customers.filter(c => 
               ['Gold', 'VIP'].includes(c.ltvTier) && 
-              c.riskScore < 30 && 
-              c.loyaltyScore >= 80
+              c.riskScore < 40 && 
+              c.loyaltyScore >= 60
             )
             break
           case 'price-sensitive-at-risk':
             segmentCustomers = response.customers.filter(c => 
-              c.riskScore >= 50 && c.priceSensitivity === 'high'
+              c.riskScore >= 40 && c.priceSensitivity === 'high'
             )
             break
           case 'new-customers-high-potential':
             segmentCustomers = response.customers.filter(c => 
-              c.customerAge < 30 && c.engagementScore >= 70
+              c.customerAge < 45 && c.engagementScore >= 50
             )
             break
           case 'seasonal-customers-dormant':
             segmentCustomers = response.customers.filter(c => 
-              c.daysSinceLastActivity > 60 && c.seasonalPattern === true
+              c.daysSinceLastActivity > 45 && (c.seasonalPattern === true || c.customerAge > 180)
             )
             break
           case 'high-frequency-low-value':
             segmentCustomers = response.customers.filter(c => 
-              c.totalOrders >= 10 && (c.totalRevenue / c.totalOrders) < 50
+              c.totalOrders >= 6 && (c.totalRevenue / c.totalOrders) < 75
             )
             break
           case 'one-time-buyers-engaged':
             segmentCustomers = response.customers.filter(c => 
-              c.totalOrders === 1 && c.engagementScore >= 80 && c.emailEngagement.openRate >= 0.4
+              c.totalOrders === 1 && c.engagementScore >= 60 && c.emailEngagement.openRate >= 0.3
             )
             break
         }
