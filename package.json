@@ -45,10 +45,12 @@
     "@radix-ui/react-tooltip": "^1.0.7",
     "cmdk": "^0.2.0",
     "vaul": "^0.9.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "faker": "^5.5.3"
   },
   "devDependencies": {
     "eslint": "^8.56.0",
-    "eslint-config-next": "14.0.4"
+    "eslint-config-next": "14.0.4",
+    "@types/faker": "^5.5.9"
   }
 }

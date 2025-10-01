@@ -70,18 +70,35 @@ A comprehensive, production-ready demo of an AI-powered customer retention and c
 
 1. **Connect your repository** to Render
 2. **Create a new Web Service** with these settings:
-   - **Build Command**: `npm install && npm run build`
+   - **Build Command**: `npm ci && npm run build`
    - **Start Command**: `npm start`
    - **Environment**: `Node`
    - **Plan**: `Free` (or higher for production)
+   - **Node Version**: `18.18.0`
 
 3. **Set environment variables**:
    ```
    NODE_ENV=production
    NEXT_PUBLIC_APP_URL=https://your-app-name.onrender.com
+   NODE_VERSION=18.18.0
    ```
 
 4. **Deploy** - Render will automatically build and deploy your app
+
+### Troubleshooting Deployment Issues
+
+If deployment fails, try these steps:
+
+1. **Check build logs** in Render dashboard for specific errors
+2. **Ensure all dependencies** are properly listed in `package.json`
+3. **Verify Node.js version** compatibility (18.18.0 recommended)
+4. **Check for TypeScript errors** by running `npm run type-check` locally
+5. **Test build locally** with `npm run build` before deploying
+
+Common issues:
+- **Build timeout**: Free tier has 15-minute build limit
+- **Memory issues**: Try upgrading to a paid plan
+- **Dependency conflicts**: Ensure all packages are compatible
 
 ### Using render.yaml
 The included `render.yaml` file provides a complete configuration for automatic deployment:
