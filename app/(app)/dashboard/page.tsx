@@ -5,6 +5,7 @@ import { KPICard } from "@/components/dashboard/kpi-card"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency, formatPercentage } from "@/lib/utils"
+import { useRouter } from "next/navigation"
 import { 
   Users, 
   TrendingDown, 
@@ -12,7 +13,8 @@ import {
   TrendingUp,
   BarChart3,
   LineChart,
-  PieChart
+  PieChart,
+  Target
 } from "lucide-react"
 import { 
   BarChart, 
@@ -64,6 +66,11 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042']
 
 export default function DashboardPage() {
   const { kpis } = useAppStore()
+  const router = useRouter()
+
+  const handleAtRiskClick = () => {
+    router.push('/customers?filter=at-risk')
+  }
 
   return (
     <div className="space-y-6">
@@ -83,6 +90,7 @@ export default function DashboardPage() {
           changeLabel="vs last month"
           icon={<Users className="h-4 w-4" />}
           trend="up"
+          onClick={handleAtRiskClick}
         />
         <KPICard
           title="Predicted Churn Rate"
@@ -101,11 +109,11 @@ export default function DashboardPage() {
           trend="up"
         />
         <KPICard
-          title="Avg. Treatment Effect"
-          value={formatPercentage(kpis.avgTreatmentEffect)}
-          change={2.1}
+          title="Unclaimed Revenue"
+          value={formatCurrency(kpis.unclaimedRevenue)}
+          change={8.3}
           changeLabel="vs last month"
-          icon={<TrendingUp className="h-4 w-4" />}
+          icon={<Target className="h-4 w-4" />}
           trend="up"
         />
       </div>

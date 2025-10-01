@@ -93,7 +93,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     atRiskCustomers: 1247,
     predictedChurnRate: 12.3,
     retainedRevenue30d: 2845000,
-    avgTreatmentEffect: 18.7
+    unclaimedRevenue: 2847500
   },
   
   activityFeed: [
@@ -165,7 +165,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           kpisUpdate.retainedRevenue30d = Math.max(0, state.kpis.retainedRevenue30d + Math.floor(Math.random() * 20000 - 10000));
         }
         if (Math.random() < 0.5) {
-          kpisUpdate.avgTreatmentEffect = Math.max(0, state.kpis.avgTreatmentEffect + (Math.random() * 0.4 - 0.2));
+          kpisUpdate.unclaimedRevenue = Math.max(0, state.kpis.unclaimedRevenue + (Math.random() * 10000 - 5000));
         }
         
         state.updateKPIs(kpisUpdate);

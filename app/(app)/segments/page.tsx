@@ -47,37 +47,55 @@ interface Segment {
 
 const predefinedSegments: Segment[] = [
   {
-    id: "high-risk",
-    name: "High Risk Customers",
-    description: "Customers with risk score > 70",
-    criteria: "riskScore > 70",
+    id: "previously-high-value-likely-churn",
+    name: "Previously High Value; Likely to Churn",
+    description: "High-value customers showing churn signals - immediate intervention needed",
+    criteria: "ltvTier in ['Gold', 'VIP'] AND riskScore >= 60",
     customerCount: 0,
     avgRiskScore: 0,
     avgLTV: 0
   },
   {
-    id: "high-value",
-    name: "High Value Customers",
-    description: "VIP and Gold tier customers",
-    criteria: "ltvTier in ['VIP', 'Gold']",
+    id: "lost-customers-resurrectable",
+    name: "Lost Customers; Able to Resurrect",
+    description: "Churned customers with high reactivation potential",
+    criteria: "status = 'churned' AND ltvTier in ['Silver', 'Gold', 'VIP'] AND daysSinceLastActivity < 90",
     customerCount: 0,
     avgRiskScore: 0,
     avgLTV: 0
   },
   {
-    id: "inactive",
-    name: "Inactive Customers",
-    description: "No purchase in last 60 days",
-    criteria: "lastPurchaseAt < 60 days ago",
+    id: "high-value-no-discount-needed",
+    name: "High Value; No Discount Needed",
+    description: "Loyal high-value customers who don't require incentives",
+    criteria: "ltvTier in ['Gold', 'VIP'] AND riskScore < 30 AND loyaltyScore >= 80",
     customerCount: 0,
     avgRiskScore: 0,
     avgLTV: 0
   },
   {
-    id: "low-engagement",
-    name: "Low Email Engagement",
-    description: "Email open rate < 20%",
-    criteria: "emailEngagement.openRate < 0.2",
+    id: "price-sensitive-at-risk",
+    name: "Price Sensitive; At Risk",
+    description: "Customers likely to churn due to price sensitivity",
+    criteria: "riskScore >= 50 AND priceSensitivity = 'high'",
+    customerCount: 0,
+    avgRiskScore: 0,
+    avgLTV: 0
+  },
+  {
+    id: "new-customers-high-potential",
+    name: "New Customers; High Potential",
+    description: "Recent customers with strong early engagement signals",
+    criteria: "customerAge < 30 days AND engagementScore >= 70",
+    customerCount: 0,
+    avgRiskScore: 0,
+    avgLTV: 0
+  },
+  {
+    id: "seasonal-customers-dormant",
+    name: "Seasonal Customers; Currently Dormant",
+    description: "Customers with seasonal purchase patterns currently inactive",
+    criteria: "lastActivity > 60 days AND seasonalPattern = true",
     customerCount: 0,
     avgRiskScore: 0,
     avgLTV: 0

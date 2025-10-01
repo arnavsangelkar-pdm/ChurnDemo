@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Customer } from "@/lib/types"
 import { CustomersTable } from "@/components/customers/customers-table"
 import { apiClient } from "@/lib/api"
@@ -8,6 +9,7 @@ import { useToast } from "@/components/ui/toast"
 
 export default function CustomersPage() {
   const { addToast } = useToast()
+  const searchParams = useSearchParams()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [total, setTotal] = useState(0)
   const [hasMore, setHasMore] = useState(false)
@@ -19,6 +21,14 @@ export default function CustomersPage() {
     riskBand?: string
     ltvTier?: string
   }>({})
+
+  // Handle URL filter parameter
+  useEffect(() => {
+    const filter = searchParams.get('filter')
+    if (filter === 'at-risk') {
+      setFilters(prev => ({ ...prev, riskBand: 'High' }))
+    }
+  }, [searchParams])
 
   const loadCustomers = async (pageNum: number = 1, reset: boolean = false) => {
     try {

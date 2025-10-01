@@ -111,7 +111,7 @@ export type KPIs = {
   atRiskCustomers: number;
   predictedChurnRate: number;
   retainedRevenue30d: number;
-  avgTreatmentEffect: number;
+  unclaimedRevenue: number;
 };
 
 export type ChartData = {

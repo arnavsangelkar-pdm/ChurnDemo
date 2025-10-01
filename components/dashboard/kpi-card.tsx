@@ -13,6 +13,7 @@ interface KPICardProps {
   icon?: React.ReactNode
   description?: string
   trend?: "up" | "down" | "neutral"
+  onClick?: () => void
 }
 
 export function KPICard({ 
@@ -22,13 +23,19 @@ export function KPICard({
   changeLabel, 
   icon, 
   description,
-  trend = "neutral"
+  trend = "neutral",
+  onClick
 }: KPICardProps) {
   const isPositive = change && change > 0
   const isNegative = change && change < 0
 
   return (
-    <Card>
+    <Card 
+      className={cn(
+        onClick && "cursor-pointer hover:shadow-md transition-shadow"
+      )}
+      onClick={onClick}
+    >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
@@ -59,6 +66,9 @@ export function KPICard({
         )}
         {description && (
           <p className="text-xs text-muted-foreground mt-1">{description}</p>
+        )}
+        {onClick && (
+          <p className="text-xs text-blue-600 mt-1">Click to view customers</p>
         )}
       </CardContent>
     </Card>
