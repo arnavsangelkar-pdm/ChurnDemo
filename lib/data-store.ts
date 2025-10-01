@@ -43,8 +43,15 @@ class DataStore {
   // Customer methods
   getCustomers(filters?: {
     search?: string
-    riskBand?: string
-    ltvTier?: string
+    riskBand?: string | string[]
+    ltvTier?: string | string[]
+    status?: string | string[]
+    customerAge?: { min?: number; max?: number }
+    engagementScore?: { min?: number; max?: number }
+    loyaltyScore?: { min?: number; max?: number }
+    priceSensitivity?: string | string[]
+    seasonalPattern?: boolean
+    daysSinceLastActivity?: { min?: number; max?: number }
     limit?: number
     offset?: number
   }) {
@@ -60,11 +67,63 @@ class DataStore {
     }
 
     if (filters?.riskBand) {
-      filtered = filtered.filter(c => c.riskBand === filters.riskBand)
+      const riskBands = Array.isArray(filters.riskBand) ? filters.riskBand : [filters.riskBand]
+      filtered = filtered.filter(c => riskBands.includes(c.riskBand))
     }
 
     if (filters?.ltvTier) {
-      filtered = filtered.filter(c => c.ltvTier === filters.ltvTier)
+      const ltvTiers = Array.isArray(filters.ltvTier) ? filters.ltvTier : [filters.ltvTier]
+      filtered = filtered.filter(c => ltvTiers.includes(c.ltvTier))
+    }
+
+    if (filters?.status) {
+      const statuses = Array.isArray(filters.status) ? filters.status : [filters.status]
+      filtered = filtered.filter(c => statuses.includes(c.status))
+    }
+
+    if (filters?.customerAge) {
+      if (filters.customerAge.min !== undefined) {
+        filtered = filtered.filter(c => c.customerAge >= filters.customerAge.min!)
+      }
+      if (filters.customerAge.max !== undefined) {
+        filtered = filtered.filter(c => c.customerAge <= filters.customerAge.max!)
+      }
+    }
+
+    if (filters?.engagementScore) {
+      if (filters.engagementScore.min !== undefined) {
+        filtered = filtered.filter(c => c.engagementScore >= filters.engagementScore.min!)
+      }
+      if (filters.engagementScore.max !== undefined) {
+        filtered = filtered.filter(c => c.engagementScore <= filters.engagementScore.max!)
+      }
+    }
+
+    if (filters?.loyaltyScore) {
+      if (filters.loyaltyScore.min !== undefined) {
+        filtered = filtered.filter(c => c.loyaltyScore >= filters.loyaltyScore.min!)
+      }
+      if (filters.loyaltyScore.max !== undefined) {
+        filtered = filtered.filter(c => c.loyaltyScore <= filters.loyaltyScore.max!)
+      }
+    }
+
+    if (filters?.priceSensitivity) {
+      const sensitivities = Array.isArray(filters.priceSensitivity) ? filters.priceSensitivity : [filters.priceSensitivity]
+      filtered = filtered.filter(c => sensitivities.includes(c.priceSensitivity))
+    }
+
+    if (filters?.seasonalPattern !== undefined) {
+      filtered = filtered.filter(c => c.seasonalPattern === filters.seasonalPattern)
+    }
+
+    if (filters?.daysSinceLastActivity) {
+      if (filters.daysSinceLastActivity.min !== undefined) {
+        filtered = filtered.filter(c => c.daysSinceLastActivity >= filters.daysSinceLastActivity.min!)
+      }
+      if (filters.daysSinceLastActivity.max !== undefined) {
+        filtered = filtered.filter(c => c.daysSinceLastActivity <= filters.daysSinceLastActivity.max!)
+      }
     }
 
     const total = filtered.length

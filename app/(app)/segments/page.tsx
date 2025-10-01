@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Customer } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -31,7 +32,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { formatCurrency, getRiskColor, getLTVTierColor } from "@/lib/utils"
-import { Search, Filter, Play, Users, Target } from "lucide-react"
+import { Search, Filter, Play, Users, Target, Zap } from "lucide-react"
 import { apiClient } from "@/lib/api"
 import { toast } from "sonner"
 
@@ -99,15 +100,37 @@ const predefinedSegments: Segment[] = [
     customerCount: 0,
     avgRiskScore: 0,
     avgLTV: 0
+  },
+  {
+    id: "high-frequency-low-value",
+    name: "High Frequency; Low Value",
+    description: "Customers who buy frequently but have low individual order values",
+    criteria: "totalOrders >= 10 AND avgOrderValue < 50",
+    customerCount: 0,
+    avgRiskScore: 0,
+    avgLTV: 0
+  },
+  {
+    id: "one-time-buyers-engaged",
+    name: "One-Time Buyers; Highly Engaged",
+    description: "Customers who made only one purchase but show high engagement signals",
+    criteria: "totalOrders = 1 AND engagementScore >= 80 AND emailEngagement.openRate >= 0.4",
+    customerCount: 0,
+    avgRiskScore: 0,
+    avgLTV: 0
   }
 ]
 
 export default function SegmentsPage() {
+  const router = useRouter()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [segments, setSegments] = useState<Segment[]>(predefinedSegments)
   const [selectedCustomers, setSelectedCustomers] = useState<Set<string>>(new Set())
   const [selectedPlay, setSelectedPlay] = useState<string | undefined>(undefined)
   const [isPlayDialogOpen, setIsPlayDialogOpen] = useState(false)
+  const [selectedSegment, setSelectedSegment] = useState<Segment | null>(null)
+  const [isSegmentPlayDialogOpen, setIsSegmentPlayDialogOpen] = useState(false)
+  const [segmentPlay, setSegmentPlay] = useState<string | undefined>(undefined)
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<{
     search?: string
@@ -139,23 +162,51 @@ export default function SegmentsPage() {
       const updatedSegments = segments.map(segment => {
         let segmentCustomers = response.customers
         
-        // Apply segment criteria (simplified)
+        // Apply segment criteria based on predefined rules
         switch (segment.id) {
-          case 'high-risk':
-            segmentCustomers = response.customers.filter(c => c.riskScore > 70)
+          case 'previously-high-value-likely-churn':
+            segmentCustomers = response.customers.filter(c => 
+              ['Gold', 'VIP'].includes(c.ltvTier) && c.riskScore >= 60
+            )
             break
-          case 'high-value':
-            segmentCustomers = response.customers.filter(c => ['VIP', 'Gold'].includes(c.ltvTier))
+          case 'lost-customers-resurrectable':
+            segmentCustomers = response.customers.filter(c => 
+              c.status === 'churned' && 
+              ['Silver', 'Gold', 'VIP'].includes(c.ltvTier) && 
+              c.daysSinceLastActivity < 90
+            )
             break
-          case 'inactive':
-            segmentCustomers = response.customers.filter(c => {
-              if (!c.lastPurchaseAt) return true
-              const daysSinceLastPurchase = (Date.now() - new Date(c.lastPurchaseAt).getTime()) / (1000 * 60 * 60 * 24)
-              return daysSinceLastPurchase > 60
-            })
+          case 'high-value-no-discount-needed':
+            segmentCustomers = response.customers.filter(c => 
+              ['Gold', 'VIP'].includes(c.ltvTier) && 
+              c.riskScore < 30 && 
+              c.loyaltyScore >= 80
+            )
             break
-          case 'low-engagement':
-            segmentCustomers = response.customers.filter(c => c.emailEngagement.openRate < 0.2)
+          case 'price-sensitive-at-risk':
+            segmentCustomers = response.customers.filter(c => 
+              c.riskScore >= 50 && c.priceSensitivity === 'high'
+            )
+            break
+          case 'new-customers-high-potential':
+            segmentCustomers = response.customers.filter(c => 
+              c.customerAge < 30 && c.engagementScore >= 70
+            )
+            break
+          case 'seasonal-customers-dormant':
+            segmentCustomers = response.customers.filter(c => 
+              c.daysSinceLastActivity > 60 && c.seasonalPattern === true
+            )
+            break
+          case 'high-frequency-low-value':
+            segmentCustomers = response.customers.filter(c => 
+              c.totalOrders >= 10 && (c.totalRevenue / c.totalOrders) < 50
+            )
+            break
+          case 'one-time-buyers-engaged':
+            segmentCustomers = response.customers.filter(c => 
+              c.totalOrders === 1 && c.engagementScore >= 80 && c.emailEngagement.openRate >= 0.4
+            )
             break
         }
 
@@ -209,6 +260,12 @@ export default function SegmentsPage() {
     }
   }
 
+  const handleSegmentClick = (segment: Segment) => {
+    setSelectedSegment(segment)
+    setSegmentPlay(undefined)
+    setIsSegmentPlayDialogOpen(true)
+  }
+
   const handleTriggerPlay = async () => {
     if (selectedCustomers.size === 0) {
       toast.error("Please select customers first")
@@ -233,6 +290,34 @@ export default function SegmentsPage() {
     } catch (error) {
       toast.error("Failed to trigger play")
       console.error("Error triggering play:", error)
+    }
+  }
+
+  const handleTriggerSegmentPlay = async () => {
+    if (!selectedSegment) {
+      toast.error("No segment selected")
+      return
+    }
+
+    if (!segmentPlay) {
+      toast.error("Please select a play")
+      return
+    }
+
+    try {
+      await apiClient.post('/trigger-segment-play', {
+        segmentId: selectedSegment.id,
+        playId: segmentPlay,
+        customerCount: selectedSegment.customerCount
+      })
+      
+      toast.success(`Play triggered for ${selectedSegment.customerCount} customers in segment: ${selectedSegment.name}`)
+      setIsSegmentPlayDialogOpen(false)
+      setSelectedSegment(null)
+      setSegmentPlay(undefined)
+    } catch (error) {
+      toast.error("Failed to trigger segment play")
+      console.error("Error triggering segment play:", error)
     }
   }
 
@@ -267,18 +352,23 @@ export default function SegmentsPage() {
       {/* Segment Overview Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {segments.map((segment) => (
-          <Card key={segment.id}>
+          <Card 
+            key={segment.id} 
+            className="cursor-pointer hover:shadow-md transition-shadow duration-200 hover:bg-gray-50"
+            onClick={() => handleSegmentClick(segment)}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {segment.name}
               </CardTitle>
-              <Target className="h-4 w-4 text-muted-foreground" />
+              <Zap className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{segment.customerCount.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
                 Avg Risk: {segment.avgRiskScore} | Avg LTV: {formatCurrency(segment.avgLTV)}
               </p>
+              <p className="text-xs text-blue-600 mt-1">Click to apply play →</p>
             </CardContent>
           </Card>
         ))}
@@ -458,6 +548,70 @@ export default function SegmentsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Segment Play Selection Dialog */}
+      <Dialog open={isSegmentPlayDialogOpen} onOpenChange={setIsSegmentPlayDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Apply Play to Segment</DialogTitle>
+            <DialogDescription>
+              Choose a play to apply to the "{selectedSegment?.name}" segment ({selectedSegment?.customerCount.toLocaleString()} customers).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Select Play</label>
+              <Select value={segmentPlay} onValueChange={setSegmentPlay}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a play" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="play-001">20% Discount Code</SelectItem>
+                  <SelectItem value="play-002">Loyalty Points Bonus</SelectItem>
+                  <SelectItem value="play-003">Personalized Bundle</SelectItem>
+                  <SelectItem value="play-004">Content Nurture Series</SelectItem>
+                  <SelectItem value="play-005">CS Outreach Call</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedSegment && (
+              <div className="bg-muted p-3 rounded-md">
+                <h4 className="font-medium text-sm mb-2">Segment Details:</h4>
+                <div className="text-xs space-y-1">
+                  <div><strong>Name:</strong> {selectedSegment.name}</div>
+                  <div><strong>Description:</strong> {selectedSegment.description}</div>
+                  <div><strong>Customer Count:</strong> {selectedSegment.customerCount.toLocaleString()}</div>
+                  <div><strong>Avg Risk Score:</strong> {selectedSegment.avgRiskScore}</div>
+                  <div><strong>Avg LTV:</strong> {formatCurrency(selectedSegment.avgLTV)}</div>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter className="flex justify-between">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                if (selectedSegment) {
+                  const filterParams = new URLSearchParams()
+                  filterParams.set('segment', selectedSegment.id)
+                  const url = `/customers?${filterParams.toString()}`
+                  router.push(url)
+                }
+              }}
+            >
+              View Customers
+            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setIsSegmentPlayDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleTriggerSegmentPlay} disabled={!segmentPlay}>
+                Apply Play to Segment
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -73,24 +73,117 @@ export function generateCustomer(id: string): Customer {
   const name = `${firstName} ${lastName}`;
   const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${randomChoice(['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com'])}`;
   
-  const firstPurchaseAt = dayjs().subtract(randomInt(30, 180), 'day').toISOString();
-  const lastPurchaseAt = Math.random() > 0.1 
-    ? dayjs().subtract(randomInt(1, 60), 'day').toISOString()
-    : null;
+  // Create more diverse customer profiles
+  const customerType = Math.random();
+  let firstPurchaseAt: string;
+  let lastPurchaseAt: string | null;
+  let totalOrders: number;
+  let totalRevenue: number;
+  let marginRate: number;
+  let ltv: number;
   
-  const totalOrders = randomInt(1, 25);
-  const totalRevenue = randomBetween(50, 5000);
-  const marginRate = randomBetween(0.2, 0.6);
-  const ltv = totalRevenue * randomBetween(1.2, 3.0);
-  
-  const riskScore = calculateRiskScore({
-    id, name, email, firstPurchaseAt, lastPurchaseAt, totalOrders, totalRevenue, marginRate, ltv,
-    riskScore: 0, riskBand: 'Low', ltvTier: 'Bronze', emailEngagement: { openRate: 0, clickRate: 0, unsubscribed: false },
-    location: { city: '', state: '', country: 'US' }, tags: []
-  });
+  if (customerType < 0.1) {
+    // 10% - New customers (high potential)
+    firstPurchaseAt = dayjs().subtract(randomInt(1, 30), 'day').toISOString();
+    lastPurchaseAt = dayjs().subtract(randomInt(1, 15), 'day').toISOString();
+    totalOrders = randomInt(1, 3);
+    totalRevenue = randomBetween(100, 800);
+    marginRate = randomBetween(0.3, 0.5);
+    ltv = totalRevenue * randomBetween(2.0, 4.0);
+  } else if (customerType < 0.2) {
+    // 10% - Churned customers (resurrectable)
+    firstPurchaseAt = dayjs().subtract(randomInt(90, 365), 'day').toISOString();
+    lastPurchaseAt = dayjs().subtract(randomInt(60, 120), 'day').toISOString();
+    totalOrders = randomInt(3, 15);
+    totalRevenue = randomBetween(500, 3000);
+    marginRate = randomBetween(0.2, 0.4);
+    ltv = totalRevenue * randomBetween(1.5, 2.5);
+  } else if (customerType < 0.3) {
+    // 10% - High value customers
+    firstPurchaseAt = dayjs().subtract(randomInt(60, 300), 'day').toISOString();
+    lastPurchaseAt = dayjs().subtract(randomInt(1, 30), 'day').toISOString();
+    totalOrders = randomInt(8, 25);
+    totalRevenue = randomBetween(2000, 8000);
+    marginRate = randomBetween(0.4, 0.6);
+    ltv = totalRevenue * randomBetween(1.8, 3.0);
+  } else if (customerType < 0.4) {
+    // 10% - Price sensitive customers
+    firstPurchaseAt = dayjs().subtract(randomInt(30, 180), 'day').toISOString();
+    lastPurchaseAt = dayjs().subtract(randomInt(1, 45), 'day').toISOString();
+    totalOrders = randomInt(2, 8);
+    totalRevenue = randomBetween(50, 500);
+    marginRate = randomBetween(0.1, 0.3);
+    ltv = totalRevenue * randomBetween(1.2, 2.0);
+  } else if (customerType < 0.5) {
+    // 10% - Seasonal customers
+    firstPurchaseAt = dayjs().subtract(randomInt(120, 400), 'day').toISOString();
+    lastPurchaseAt = dayjs().subtract(randomInt(60, 120), 'day').toISOString();
+    totalOrders = randomInt(2, 6);
+    totalRevenue = randomBetween(200, 1500);
+    marginRate = randomBetween(0.2, 0.4);
+    ltv = totalRevenue * randomBetween(1.5, 2.5);
+  } else {
+    // 50% - Regular customers
+    firstPurchaseAt = dayjs().subtract(randomInt(30, 180), 'day').toISOString();
+    lastPurchaseAt = Math.random() > 0.1 
+      ? dayjs().subtract(randomInt(1, 60), 'day').toISOString()
+      : null;
+    totalOrders = randomInt(1, 15);
+    totalRevenue = randomBetween(100, 2000);
+    marginRate = randomBetween(0.2, 0.5);
+    ltv = totalRevenue * randomBetween(1.2, 2.8);
+  }
   
   const city = randomChoice(CITIES);
   const state = randomChoice(STATES);
+  
+  // Calculate additional properties
+  const customerAge = dayjs().diff(dayjs(firstPurchaseAt), 'day');
+  const daysSinceLastActivity = lastPurchaseAt 
+    ? dayjs().diff(dayjs(lastPurchaseAt), 'day')
+    : customerAge;
+  
+  // Generate email engagement data first
+  const emailEngagement = {
+    openRate: randomBetween(0.1, 0.8),
+    clickRate: randomBetween(0.02, 0.3),
+    unsubscribed: Math.random() < 0.05,
+    lastOpenAt: Math.random() > 0.3 ? dayjs().subtract(randomInt(1, 30), 'day').toISOString() : null,
+    lastClickAt: Math.random() > 0.7 ? dayjs().subtract(randomInt(1, 14), 'day').toISOString() : null
+  };
+  
+  const riskScore = calculateRiskScore({
+    id, name, email, firstPurchaseAt, lastPurchaseAt, totalOrders, totalRevenue, marginRate, ltv,
+    riskScore: 0, riskBand: 'Low', ltvTier: 'Bronze', emailEngagement,
+    location: { city, state, country: 'US' }, tags: [],
+    loyaltyScore: 0, priceSensitivity: 'medium', customerAge, seasonalPattern: false,
+    status: 'active', engagementScore: 0, daysSinceLastActivity
+  });
+  
+  // Determine customer status
+  let status: 'active' | 'churned' | 'dormant' = 'active';
+  if (daysSinceLastActivity > 90 && riskScore > 70) {
+    status = 'churned';
+  } else if (daysSinceLastActivity > 60) {
+    status = 'dormant';
+  }
+  
+  // Calculate loyalty score based on various factors
+  const loyaltyScore = Math.min(100, Math.max(0, 
+    (totalOrders * 10) + 
+    (totalRevenue / 50) + 
+    (customerAge / 10) + 
+    (emailEngagement.openRate * 30) +
+    (Math.random() * 20 - 10) // Add some randomness
+  ));
+  
+  // Calculate engagement score
+  const engagementScore = Math.min(100, Math.max(0,
+    (emailEngagement.openRate * 40) +
+    (emailEngagement.clickRate * 60) +
+    (totalOrders * 5) +
+    (Math.random() * 20 - 10)
+  ));
   
   return {
     id,
@@ -106,15 +199,16 @@ export function generateCustomer(id: string): Customer {
     riskScore,
     riskBand: getRiskBand(riskScore),
     ltvTier: getLTVTier(ltv),
-    emailEngagement: {
-      openRate: randomBetween(0.1, 0.8),
-      clickRate: randomBetween(0.02, 0.3),
-      unsubscribed: Math.random() < 0.05,
-      lastOpenAt: Math.random() > 0.3 ? dayjs().subtract(randomInt(1, 30), 'day').toISOString() : null,
-      lastClickAt: Math.random() > 0.7 ? dayjs().subtract(randomInt(1, 14), 'day').toISOString() : null
-    },
+    emailEngagement,
     location: { city, state, country: 'US' },
-    tags: randomChoices(TAGS, randomInt(1, 4))
+    tags: randomChoices(TAGS, randomInt(1, 4)),
+    loyaltyScore: Math.round(loyaltyScore),
+    priceSensitivity: customerType < 0.4 ? 'high' : (customerType < 0.7 ? 'medium' : 'low'),
+    customerAge,
+    seasonalPattern: customerType >= 0.4 && customerType < 0.5, // Seasonal customers have seasonal patterns
+    status,
+    engagementScore: Math.round(engagementScore),
+    daysSinceLastActivity
   };
 }
 
@@ -222,8 +316,8 @@ export function generateSeedData() {
   const supportTickets: SupportTicket[] = [];
   const reviews: Review[] = [];
   
-  // Generate 500 customers
-  for (let i = 0; i < 500; i++) {
+  // Generate 1000 customers for better segment distribution
+  for (let i = 0; i < 1000; i++) {
     const customer = generateCustomer(`cust-${i.toString().padStart(3, '0')}`);
     customers.push(customer);
     

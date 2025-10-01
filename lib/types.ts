@@ -21,6 +21,14 @@ export type Customer = {
   };
   location: { city: string; state: string; country: string; };
   tags: string[];
+  // Additional properties for segment criteria
+  loyaltyScore: number; // 0..100
+  priceSensitivity: 'low' | 'medium' | 'high';
+  customerAge: number; // days since first purchase
+  seasonalPattern: boolean;
+  status: 'active' | 'churned' | 'dormant';
+  engagementScore: number; // 0..100
+  daysSinceLastActivity: number;
 };
 
 export type Transaction = {

@@ -52,6 +52,14 @@ export default function PlaysPage() {
   const [selectedPlay, setSelectedPlay] = useState<PlayType | null>(null)
   const [simulationResults, setSimulationResults] = useState<any>(null)
   const [simulating, setSimulating] = useState(false)
+  const [isTriggerDialogOpen, setIsTriggerDialogOpen] = useState(false)
+  const [triggering, setTriggering] = useState(false)
+  const [triggerResults, setTriggerResults] = useState<{
+    success: boolean
+    message: string
+    customerCount?: number
+    timestamp?: string
+  } | null>(null)
 
   // Form state for creating new play
   const [newPlay, setNewPlay] = useState({
@@ -134,6 +142,40 @@ export default function PlaysPage() {
       console.error("Error simulating play:", error)
     } finally {
       setSimulating(false)
+    }
+  }
+
+  const handleTriggerPlay = async (play: PlayType) => {
+    try {
+      setTriggering(true)
+      setSelectedPlay(play)
+      setIsTriggerDialogOpen(true)
+      setTriggerResults(null)
+      
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
+      // Mock trigger results
+      const customerCount = Math.floor(Math.random() * 500) + 50
+      const results = {
+        success: true,
+        message: `Play "${play.name}" has been successfully triggered!`,
+        customerCount: customerCount,
+        timestamp: new Date().toLocaleString()
+      }
+      
+      setTriggerResults(results)
+      toast.success(`Play triggered for ${customerCount} customers`)
+    } catch (error) {
+      const results = {
+        success: false,
+        message: "Failed to trigger play. Please try again.",
+        timestamp: new Date().toLocaleString()
+      }
+      setTriggerResults(results)
+      toast.error("Failed to trigger play")
+    } finally {
+      setTriggering(false)
     }
   }
 
@@ -350,7 +392,11 @@ export default function PlaysPage() {
                       <TestTube className="h-4 w-4 mr-2" />
                       Simulate
                     </Button>
-                    <Button size="sm" className="flex-1">
+                    <Button 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => handleTriggerPlay(play)}
+                    >
                       <Play className="h-4 w-4 mr-2" />
                       Trigger
                     </Button>
@@ -410,6 +456,87 @@ export default function PlaysPage() {
           ) : null}
           <DialogFooter>
             <Button onClick={() => setIsSimulateDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Trigger Play Dialog */}
+      <Dialog open={isTriggerDialogOpen} onOpenChange={setIsTriggerDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Trigger Play</DialogTitle>
+            <DialogDescription>
+              Execute "{selectedPlay?.name}" play
+            </DialogDescription>
+          </DialogHeader>
+          {triggering ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Triggering play...</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Sending {selectedPlay?.channel} messages to eligible customers
+                </p>
+              </div>
+            </div>
+          ) : triggerResults ? (
+            <div className="space-y-4">
+              <div className={`p-4 rounded-lg ${triggerResults.success ? 'bg-green-50 dark:bg-green-950' : 'bg-red-50 dark:bg-red-950'}`}>
+                <div className="flex items-center space-x-2">
+                  {triggerResults.success ? (
+                    <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center">
+                      <span className="text-white text-xs">✓</span>
+                    </div>
+                  ) : (
+                    <div className="h-5 w-5 rounded-full bg-red-500 flex items-center justify-center">
+                      <span className="text-white text-xs">✗</span>
+                    </div>
+                  )}
+                  <span className={`font-medium ${triggerResults.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}`}>
+                    {triggerResults.success ? 'Play Triggered Successfully!' : 'Play Trigger Failed'}
+                  </span>
+                </div>
+                <p className={`text-sm mt-2 ${triggerResults.success ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}>
+                  {triggerResults.message}
+                </p>
+                {triggerResults.customerCount && (
+                  <div className="mt-3 p-3 bg-white dark:bg-gray-800 rounded border">
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                      {triggerResults.customerCount.toLocaleString()}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Customers Reached</div>
+                  </div>
+                )}
+                <div className="text-xs text-muted-foreground mt-2">
+                  Triggered at: {triggerResults.timestamp}
+                </div>
+              </div>
+              
+              {triggerResults.success && selectedPlay && (
+                <div className="bg-muted p-4 rounded-lg">
+                  <h4 className="font-medium text-sm mb-2">Play Details:</h4>
+                  <div className="text-xs space-y-1">
+                    <div><strong>Channel:</strong> {selectedPlay.channel}</div>
+                    <div><strong>Type:</strong> {selectedPlay.kind}</div>
+                    <div><strong>Estimated Uplift:</strong> {selectedPlay.estUpliftPct}%</div>
+                    <div><strong>Estimated Cost:</strong> {selectedPlay.estCostPctOfRev}% of revenue</div>
+                    {selectedPlay.copy && (
+                      <div className="mt-2">
+                        <strong>Message:</strong>
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border text-xs mt-1">
+                          "{selectedPlay.copy}"
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : null}
+          <DialogFooter>
+            <Button onClick={() => setIsTriggerDialogOpen(false)}>
               Close
             </Button>
           </DialogFooter>
