@@ -86,7 +86,7 @@ export function generateCustomer(id: string): Customer {
     // 10% - New customers (high potential)
     firstPurchaseAt = dayjs().subtract(randomInt(1, 30), 'day').toISOString();
     lastPurchaseAt = dayjs().subtract(randomInt(1, 15), 'day').toISOString();
-    totalOrders = randomInt(1, 3);
+    totalOrders = Math.random() < 0.6 ? 1 : randomInt(2, 3); // 60% have exactly 1 order
     totalRevenue = randomBetween(100, 800);
     marginRate = randomBetween(0.3, 0.5);
     ltv = totalRevenue * randomBetween(2.0, 4.0);
@@ -128,7 +128,8 @@ export function generateCustomer(id: string): Customer {
     lastPurchaseAt = Math.random() > 0.1 
       ? dayjs().subtract(randomInt(1, 60), 'day').toISOString()
       : null;
-    totalOrders = randomInt(1, 15);
+    // Ensure some one-time buyers in regular customers
+    totalOrders = Math.random() < 0.15 ? 1 : randomInt(2, 15); // 15% have exactly 1 order
     totalRevenue = randomBetween(100, 2000);
     marginRate = randomBetween(0.2, 0.5);
     ltv = totalRevenue * randomBetween(1.2, 2.8);

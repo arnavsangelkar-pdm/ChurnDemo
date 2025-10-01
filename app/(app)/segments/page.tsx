@@ -205,7 +205,7 @@ export default function SegmentsPage() {
             break
           case 'one-time-buyers-engaged':
             segmentCustomers = response.customers.filter(c => 
-              c.totalOrders === 1 && c.engagementScore >= 60 && c.emailEngagement.openRate >= 0.3
+              c.totalOrders === 1 && c.engagementScore >= 30 && c.emailEngagement.openRate >= 0.2
             )
             break
         }

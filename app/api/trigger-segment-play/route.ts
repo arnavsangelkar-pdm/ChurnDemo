@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         break
       case 'one-time-buyers-engaged':
         segmentCustomers = allCustomers.filter(c => 
-          c.totalOrders === 1 && c.engagementScore >= 60 && c.emailEngagement.openRate >= 0.3
+          c.totalOrders === 1 && c.engagementScore >= 30 && c.emailEngagement.openRate >= 0.2
         )
         break
       default:
